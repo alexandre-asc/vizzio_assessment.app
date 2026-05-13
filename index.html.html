@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Vizzio Assessment</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0A0A0A;color:#F0F0F0;min-height:100vh}
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.on{display:flex}
+
+/* ── LOGO ── */
+.logo-svg{display:block}
+
+/* ── LOGIN ── */
+.center{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#161616;border:1px solid #2A2A2A;border-radius:20px;padding:40px 36px;width:100%;max-width:400px;text-align:center}
+.logo-wrap{background:#111;border-radius:12px;padding:18px 24px;display:inline-flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:1px}
+.logo-tag{font-size:11px;font-weight:700;color:#00D4C8;letter-spacing:3px;text-transform:uppercase}
+.card h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.card p{font-size:13px;color:#666;margin-bottom:26px}
+.field{margin-bottom:13px;text-align:left}
+.field label{display:block;font-size:12px;color:#777;margin-bottom:5px;font-weight:500}
+.field input{width:100%;background:#111;border:1.5px solid #2A2A2A;border-radius:9px;padding:12px 14px;font-size:14px;color:#F0F0F0;outline:none;transition:border-color .15s}
+.field input:focus{border-color:#00D4C8}
+.btn{width:100%;background:#00D4C8;color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px}
+.btn:hover{opacity:.88}
+.btn:disabled{background:#2A2A2A;color:#555;cursor:default;opacity:1}
+.err{color:#EF4444;font-size:13px;margin-top:10px;display:none}
+
+/* ── TOPBAR ── */
+.topbar{background:#111;border-bottom:1px solid #1E1E1E;padding:11px 22px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+.topbar-name{font-size:17px;font-weight:800;color:#fff}
+.topbar-tag{font-size:9px;font-weight:700;color:#00D4C8;letter-spacing:3px}
+.btn-sm{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #2A2A2A;background:#1A1A1A;color:#888;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{border-color:#00D4C8;color:#00D4C8}
+.btn-teal{background:#00D4C8!important;color:#000!important;border-color:#00D4C8!important}
+.btn-teal:hover{opacity:.85;color:#000!important}
+
+/* ── ADMIN BODY ── */
+.abody{flex:1;overflow-y:auto;padding:22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px}
+.sc{background:#161616;border:1px solid #222;border-radius:12px;padding:16px}
+.sc-val{font-size:26px;font-weight:700;color:#fff}
+.sc-lbl{font-size:12px;color:#666;margin-top:3px}
+.sec{font-size:15px;font-weight:600;color:#fff;margin-bottom:12px}
+.cfg{background:#161616;border:1px solid #222;border-radius:14px;padding:22px;margin-bottom:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fl label{font-size:12px;color:#777;display:block;margin-bottom:5px;font-weight:500}
+.fl input,.fl select{width:100%;background:#111;border:1.5px solid #2A2A2A;border-radius:8px;padding:10px 12px;font-size:13px;color:#F0F0F0;outline:none;transition:border-color .15s}
+.fl input:focus,.fl select:focus{border-color:#00D4C8}
+.link-box{background:#0D0D0D;border:1px solid #222;border-radius:10px;padding:12px 14px;margin-top:12px}
+.link-txt{font-size:12px;color:#00D4C8;word-break:break-all;margin-bottom:8px;line-height:1.5}
+.copy-btn{background:#00D4C8;color:#000;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
+.tbl-wrap{background:#161616;border:1px solid #222;border-radius:12px;overflow:hidden;margin-bottom:28px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#111;color:#666;font-size:11px;font-weight:600;padding:10px 13px;text-align:left;border-bottom:1px solid #1E1E1E;text-transform:uppercase;letter-spacing:.04em}
+td{padding:11px 13px;border-bottom:1px solid #1A1A1A;color:#CCC}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#111}
+.chip{display:inline-block;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:700}
+.cD{background:#3B1010;color:#FF6B6B}
+.cI{background:#0F2A14;color:#6BCB77}
+.cS{background:#101030;color:#6B9EFF}
+.cC{background:#200F35;color:#C77DFF}
+.badge-done{background:#0A2010;color:#22C55E;font-size:11px;font-weight:700;padding:3px 9px;border-radius:14px}
+.badge-pend{background:#1E1A00;color:#F59E0B;font-size:11px;font-weight:700;padding:3px 9px;border-radius:14px}
+.vbtn{background:transparent;border:1px solid #2A2A2A;color:#777;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;transition:all .15s}
+.vbtn:hover{border-color:#00D4C8;color:#00D4C8}
+
+/* ── ASSESS ── */
+.ahdr{background:#111;border-bottom:1px solid #1E1E1E;padding:20px;text-align:center;flex-shrink:0}
+.ahdr-logo{background:#0A0A0A;border-radius:12px;padding:12px 22px;display:inline-flex;align-items:center;gap:10px;margin-bottom:12px}
+.ahdr h1{font-size:19px;font-weight:700;color:#fff;margin-bottom:3px}
+.ahdr p{font-size:13px;color:#666}
+.awrap{flex:1;overflow-y:auto}
+.ainner{max-width:640px;margin:0 auto;padding:22px 16px}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-bottom:22px}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.phase-tag{background:rgba(0,212,200,.12);color:#00D4C8;font-size:12px;font-weight:600;padding:4px 12px;border-radius:14px}
+.prog-info{font-size:12px;color:#666}
+.prog-bar{height:4px;background:#1E1E1E;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:#00D4C8;border-radius:99px;transition:width .3s}
+
+/* ── QUESTION CARD ── */
+.qcard{background:#161616;border:1px solid #222;border-radius:14px;padding:22px;margin-bottom:14px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.qnum{font-size:11px;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.qtext{font-size:15px;font-weight:500;color:#fff;line-height:1.65;margin-bottom:18px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{background:#111;border:1.5px solid #222;border-radius:10px;padding:12px 15px;font-size:13px;color:#BBB;cursor:pointer;text-align:left;line-height:1.5;width:100%;transition:all .12s}
+.opt:hover{border-color:#00D4C8;color:#fff}
+.opt.sel{border-color:#00D4C8;background:rgba(0,212,200,.08);color:#00D4C8;font-weight:500}
+.scale-row{display:flex;gap:8px;margin-bottom:8px}
+.scl{flex:1;background:#111;border:1.5px solid #222;border-radius:10px;padding:14px 4px;font-size:16px;font-weight:700;cursor:pointer;text-align:center;color:#BBB;transition:all .12s;min-width:0}
+.scl:hover{border-color:#00D4C8;color:#fff}
+.scl.sel{border-color:#00D4C8;background:rgba(0,212,200,.12);color:#00D4C8}
+.scale-lbl{display:flex;justify-content:space-between;font-size:11px;color:#555}
+.anav{display:flex;gap:10px;margin-top:18px}
+.btn-back{flex:1;background:#161616;border:1px solid #222;color:#777;border-radius:10px;padding:12px;font-size:14px;cursor:pointer;transition:all .15s}
+.btn-back:hover{border-color:#555;color:#AAA}
+.btn-next{flex:2;background:#00D4C8;color:#000;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-next:hover{opacity:.88}
+.btn-next:disabled{background:#1E1E1E;color:#444;cursor:default;opacity:1}
+
+/* ── INFO CARD ── */
+.info-card{background:#161616;border:1px solid #222;border-radius:14px;padding:22px;margin-bottom:14px}
+.info-card h2{font-size:17px;font-weight:600;color:#fff;margin-bottom:5px}
+.info-card p{font-size:13px;color:#666;line-height:1.6;margin-bottom:18px}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ifl label{font-size:12px;color:#777;display:block;margin-bottom:5px;font-weight:500}
+.ifl input{width:100%;background:#111;border:1.5px solid #222;border-radius:8px;padding:11px 13px;font-size:13px;color:#F0F0F0;outline:none;transition:border-color .15s}
+.ifl input:focus{border-color:#00D4C8}
+.tip-box{background:rgba(0,212,200,.05);border:1px solid rgba(0,212,200,.18);border-radius:12px;padding:16px;margin-bottom:14px}
+.tip-box h3{font-size:13px;font-weight:600;color:#00A898;margin-bottom:6px}
+.tip-box p{font-size:13px;color:#777;line-height:1.65}
+
+/* ── LOADING ── */
+.load-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px}
+.spin{width:44px;height:44px;border:3px solid #1E1E1E;border-top-color:#00D4C8;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:15px;color:#777;text-align:center}
+
+/* ── RESULT ── */
+.rbody{max-width:760px;margin:0 auto;padding:22px 16px}
+.hero{background:linear-gradient(135deg,#004E4A,#002E2B);border:1px solid #1A4040;border-radius:14px;padding:26px;margin-bottom:18px;text-align:center}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.hero-name{font-size:28px;font-weight:800;color:#fff;margin:6px 0}
+.hero-role{font-size:13px;color:rgba(255,255,255,.5)}
+.disc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.dcard{background:#161616;border:1px solid #222;border-radius:12px;padding:14px;text-align:center}
+.dletter{font-size:32px;font-weight:800;margin-bottom:2px}
+.dname{font-size:11px;font-weight:600;color:#AAA;text-transform:uppercase;letter-spacing:.04em}
+.dscore{font-size:13px;color:#666;margin-top:4px}
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.chart-card{background:#161616;border:1px solid #222;border-radius:12px;padding:18px}
+.chart-card .ct{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+canvas{display:block;max-width:100%}
+.sab-item{background:#111;border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.sab-name{font-size:12px;font-weight:500;color:#CCC;min-width:110px}
+.sab-bar{flex:1;height:5px;background:#1E1E1E;border-radius:99px;overflow:hidden}
+.sab-fill{height:100%;border-radius:99px;background:#EF4444}
+.sab-val{font-size:12px;color:#555;min-width:28px;text-align:right}
+.ai-box{background:#161616;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:14px}
+.ai-box h3{font-size:12px;font-weight:600;color:#00A898;margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em}
+.ai-txt{font-size:13px;color:#888;line-height:1.85;white-space:pre-wrap}
+.fbtn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.fbtn{flex:1;min-width:130px;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;text-align:center;transition:opacity .15s}
+.fbtn-t{background:#00D4C8;color:#000}
+.fbtn-t:hover{opacity:.88}
+.fbtn-d{background:#161616;color:#CCC;border:1px solid #2A2A2A}
+.fbtn-d:hover{border-color:#555}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#161616;border:1px solid #222;border-radius:20px;width:100%;max-width:720px;max-height:88vh;overflow-y:auto;padding:26px}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.mtitle{font-size:17px;font-weight:600;color:#fff}
+.mclose{background:#111;border:1px solid #2A2A2A;color:#777;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:13px}
+.mclose:hover{border-color:#555;color:#CCC}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:#00D4C8;color:#000;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;color:#444;padding:36px;font-size:13px}
+
+@media(max-width:560px){
+  .row2,.igrid,.disc-grid{grid-template-columns:1fr 1fr}
+  .chart-grid-2{grid-template-columns:1fr!important}
+  .card{padding:28px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mtitle" id="mtitle">Resultado</div>
+      <button class="mclose" onclick="closeModal()">Fechar ✕</button>
+    </div>
+    <div id="mbody"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div class="page on" id="pgLogin">
+  <div class="center">
+    <div class="card">
+      <div class="logo-wrap">
+        <div>
+          <div class="logo-name">VIZZIO</div>
+          <div class="logo-tag">TRAINING</div>
+        </div>
+      </div>
+      <h2>Vizzio Assessment</h2>
+      <p>Plataforma de Perfil Comportamental</p>
+      <div class="field">
+        <label>Usuário</label>
+        <input type="text" id="lUser" placeholder="vizzio" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div class="err" id="lErr">Usuário ou senha incorretos.</div>
+      <button class="btn" onclick="login()">Entrar no Painel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN ═══════════════ -->
+<div class="page" id="pgAdmin">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div>
+        <div class="topbar-name">VIZZIO</div>
+        <div class="topbar-tag">TRAINING</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:#555">Painel Admin</span>
+      <button class="btn-sm" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <div class="abody">
+    <div class="stats" id="statsGrid"></div>
+
+    <!-- Status Firebase -->
+    <div id="fbStatus" style="display:flex;align-items:center;gap:8px;background:#111;border:1px solid #222;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:13px;color:#666">
+      <span id="fbDot" style="width:10px;height:10px;border-radius:50%;background:#555;display:inline-block;flex-shrink:0"></span>
+      <span id="fbMsg">Verificando conexão com banco de dados...</span>
+    </div>
+
+    <div class="sec">Configurar Assessment</div>
+    <div class="cfg">
+      <div class="row2">
+        <div class="fl"><label>Nome do Assessment</label><input type="text" id="cfgName" value="Vizzio Assessment"></div>
+        <div class="fl"><label>Empresa cliente</label><input type="text" id="cfgCo" placeholder="Ex: TechCorp Ltda"></div>
+      </div>
+      <div class="row2">
+        <div class="fl">
+          <label>Nível dos participantes</label>
+          <select id="cfgLv">
+            <option value="exec">Executivo / C-Level / Diretor</option>
+            <option value="mgmt" selected>Gestão / Coordenador / Supervisor</option>
+            <option value="oper">Operacional / Analista / Assistente</option>
+          </select>
+        </div>
+        <div class="fl"><label>Chave Groq (IA) — console.groq.com</label><input type="password" id="cfgKey" placeholder="gsk_xxxx" autocomplete="off"></div>
+      </div>
+      <button class="btn" style="max-width:180px" onclick="genLink()">Gerar Link</button>
+      <div id="fbConfigAlert" style="display:none;background:#1A1000;border:1px solid #3A2800;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;color:#F59E0B;line-height:1.7">
+        ⚠️ <b>Banco de dados não configurado.</b> Os resultados só ficam salvos neste navegador.<br>
+        Para receber resultados de outros dispositivos, configure o Firebase:<br>
+        <a href="https://console.firebase.google.com" target="_blank" style="color:#00D4C8">console.firebase.google.com</a> → Criar projeto → Firestore → Copiar config → Colar no código.
+        <br><a href="#" onclick="alert('Copie as credenciais do Firebase Console e substitua os valores em FIREBASE_CFG no início do script.')" style="color:#00D4C8">Ver instruções detalhadas</a>
+      </div>
+      <div id="linkBox" style="display:none;margin-top:4px">
+        <div style="font-size:12px;color:#555;margin:12px 0 6px">Link gerado para enviar ao participante:</div>
+        <div class="link-box">
+          <div class="link-txt" id="linkTxt"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="copy-btn" onclick="copyLink()">📋 Copiar Link</button>
+            <button class="copy-btn" style="background:#25D366;color:#fff" onclick="sendWhatsApp()">💬 Enviar pelo WhatsApp</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#444;margin-top:8px">O participante abre, responde e o resultado aparece abaixo.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="sec" style="margin:0">Resultados Recebidos</div>
+      <button class="btn-sm btn-teal" onclick="refreshRes()">↻ Atualizar</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Empresa</th><th>Cargo</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+        <tbody id="resTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ASSESSMENT ═══════════════ -->
+<div class="page" id="pgAssess">
+  <div class="ahdr">
+    <div class="ahdr-logo">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#fff">VIZZIO</div>
+        <div style="font-size:9px;font-weight:700;color:#00D4C8;letter-spacing:3px">TRAINING</div>
+      </div>
+    </div>
+    <h1 id="aTitle">Vizzio Assessment</h1>
+    <p id="aCo">Vizzio Training</p>
+  </div>
+  <div class="awrap">
+    <div class="ainner">
+      <!-- STEP 0: dados pessoais -->
+      <div id="step0">
+        <div class="tip-box">
+          <h3>Sobre este Assessment</h3>
+          <p>Não existem respostas certas ou erradas. Responda com a primeira coisa que vier à mente. Seja espontâneo e honesto — o relatório completo será gerado ao final.</p>
+        </div>
+        <div class="info-card">
+          <h2>Seus dados</h2>
+          <p>Preencha as informações abaixo para iniciar o mapeamento.</p>
+          <div class="igrid">
+            <div class="ifl"><label>Nome completo</label><input type="text" id="pName" placeholder="Seu nome completo"></div>
+            <div class="ifl"><label>WhatsApp</label><input type="tel" id="pPhone" placeholder="(00) 00000-0000"></div>
+            <div class="ifl"><label>Empresa</label><input type="text" id="pCo" placeholder="Nome da empresa"></div>
+            <div class="ifl"><label>Cargo / Função</label><input type="text" id="pRole" placeholder="Ex: Gerente Comercial"></div>
+          </div>
+        </div>
+        <button class="btn" onclick="startAssessment()">Iniciar Assessment →</button>
+      </div>
+
+      <!-- STEP Q: perguntas -->
+      <div id="stepQ" style="display:none">
+        <div class="prog-wrap">
+          <div class="prog-top">
+            <span class="phase-tag" id="phTag">DISC</span>
+            <span class="prog-info" id="progTxt">1 / 29</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:3%"></div></div>
+        </div>
+        <div id="qArea"></div>
+        <div class="anav">
+          <button class="btn-back" id="btnBack" onclick="prevQ()">← Anterior</button>
+          <button class="btn-next" id="btnNext" onclick="nextQ()" disabled>Próxima →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LOADING ═══════════════ -->
+<div class="page" id="pgLoad">
+  <div class="load-wrap">
+    <div class="spin"></div>
+    <div class="load-txt" id="loadTxt">Calculando seu perfil comportamental…</div>
+    <div style="font-size:12px;color:#444;text-align:center">A inteligência artificial está processando suas respostas.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULT ═══════════════ -->
+<div class="page" id="pgResult">
+  <div class="ahdr">
+    <div class="ahdr-logo">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#fff">VIZZIO</div>
+        <div style="font-size:9px;font-weight:700;color:#00D4C8;letter-spacing:3px">TRAINING</div>
+      </div>
+    </div>
+    <h1 id="rTitle">Vizzio Assessment</h1>
+  </div>
+  <div class="awrap">
+    <div class="rbody" id="rbody"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// PERGUNTAS
+// ══════════════════════════════════════════════════════════════
+var QUESTIONS = [
+  // DISC
+  {id:"d1",phase:"DISC — Perfil Comportamental",type:"scale",text:"Quando há um desafio urgente, minha tendência é agir com decisão imediata, mesmo sem todas as informações.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"D"},
+  {id:"d2",phase:"DISC — Perfil Comportamental",type:"choice",text:"Quando você discorda de algo em uma reunião, você:",opts:["Fala logo o que pensa e defende com firmeza","Tenta convencer com entusiasmo e bom humor","Escuta todos e aguarda o consenso se formar","Pesquisa dados antes de se posicionar"],dims:["D","I","S","C"]},
+  {id:"d3",phase:"DISC — Perfil Comportamental",type:"scale",text:"Prefiro ter autonomia para decidir sem supervisão constante.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"D"},
+  {id:"i1",phase:"DISC — Perfil Comportamental",type:"scale",text:"Tenho facilidade de motivar e engajar as pessoas ao meu redor com entusiasmo.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"I"},
+  {id:"i2",phase:"DISC — Perfil Comportamental",type:"choice",text:"Numa reunião de equipe, você tende a:",opts:["Conduzir com energia e manter o ritmo","Criar um ambiente leve e participativo","Garantir que todos sejam ouvidos","Focar nos dados e nos números da pauta"],dims:["D","I","S","C"]},
+  {id:"i3",phase:"DISC — Perfil Comportamental",type:"scale",text:"Sinto-me confortável sendo o centro das atenções em apresentações.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"I"},
+  {id:"s1",phase:"DISC — Perfil Comportamental",type:"scale",text:"Prefiro um ambiente de trabalho estável e previsível a mudanças frequentes.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"S"},
+  {id:"s2",phase:"DISC — Perfil Comportamental",type:"choice",text:"O que mais te incomoda no trabalho?",opts:["Falta de autonomia para decidir","Ambiente sem energia ou entusiasmo","Instabilidade e mudanças sem aviso","Desorganização e falta de processos"],dims:["D","I","S","C"]},
+  {id:"s3",phase:"DISC — Perfil Comportamental",type:"scale",text:"Apoio colegas mesmo quando isso exige ceder meu próprio espaço.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"S"},
+  {id:"c1",phase:"DISC — Perfil Comportamental",type:"scale",text:"Me incomoda quando algo é feito fora do processo ou padrão estabelecido.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"C"},
+  {id:"c2",phase:"DISC — Perfil Comportamental",type:"choice",text:"Ao receber uma tarefa nova, você:",opts:["Começa logo e aprende no caminho","Fala com as pessoas para entender melhor","Cria um plano detalhado antes de executar","Pesquisa melhores práticas e referências"],dims:["D","I","S","C"]},
+  {id:"c3",phase:"DISC — Perfil Comportamental",type:"scale",text:"Evito entregar um trabalho até ter certeza que está correto e bem feito.",labels:{a:"Discordo muito",b:"Concordo muito"},dim:"C"},
+  // Temperamento
+  {id:"t1",phase:"Temperamento",type:"choice",text:"Quando algo dá errado no trabalho, sua primeira reação é:",opts:["Resolver na hora e seguir em frente","Animar a equipe e manter o moral elevado","Ouvir todos antes de tomar qualquer ação","Investigar a causa raiz antes de agir"],dims:["Co","Sa","Fl","Me"]},
+  {id:"t2",phase:"Temperamento",type:"scale",text:"Você se energiza com metas desafiadoras e resultados competitivos.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Co"},
+  {id:"t3",phase:"Temperamento",type:"scale",text:"Prefiro pensar bastante antes de falar ou tomar uma ação.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Me"},
+  {id:"t4",phase:"Temperamento",type:"choice",text:"Como você reage quando um colega comete um erro?",opts:["Dá feedback direto sobre o que precisa mudar","Encoraja e mostra que vai dar certo","Conversa em particular e oferece ajuda concreta","Analisa a situação e sugere um plano de melhoria"],dims:["Co","Sa","Fl","Me"]},
+  // Dominância Cerebral
+  {id:"b1",phase:"Dominância Cerebral",type:"scale",text:"Prefiro trabalhar com dados, análise e lógica a criar ideias novas.",labels:{a:"Prefiro criatividade",b:"Prefiro dados e análise"},dim:"L"},
+  {id:"b2",phase:"Dominância Cerebral",type:"choice",text:"Ao planejar um projeto, você começa por:",opts:["Imaginar o resultado ideal e as possibilidades","Montar um cronograma e lista de tarefas detalhada","Pensar em como as pessoas envolvidas serão afetadas","Listar recursos necessários e possíveis riscos"],dims:["RR","LL","LR","RL"]},
+  {id:"b3",phase:"Dominância Cerebral",type:"scale",text:"Tenho facilidade de perceber padrões e conexões que outras pessoas não enxergam.",labels:{a:"Raramente",b:"Sempre"},dim:"R"},
+  {id:"b4",phase:"Dominância Cerebral",type:"choice",text:"O que mais te irrita em uma reunião?",opts:["Quando não há conclusões ou próximos passos claros","Excesso de regras e burocracia processual","Ambiente frio e sem conexão entre as pessoas","Falta de organização e agenda definida"],dims:["RR","RL","LR","LL"]},
+  // Inteligência Positiva
+  {id:"q1",phase:"Inteligência Positiva — QP",type:"scale",text:"Mesmo em dias difíceis, consigo encontrar algo de positivo na situação.",labels:{a:"Quase nunca",b:"Quase sempre"},dim:"QP"},
+  {id:"q2",phase:"Inteligência Positiva — QP",type:"scale",text:"Consigo me manter calmo e focado quando o trabalho está sob pressão.",labels:{a:"Quase nunca",b:"Quase sempre"},dim:"QP"},
+  {id:"q3",phase:"Inteligência Positiva — QP",type:"scale",text:"Quando erro, consigo aprender e seguir em frente sem me culpar demais.",labels:{a:"Raramente",b:"Sempre"},dim:"QP"},
+  // Sabotadores
+  {id:"sb1",phase:"Sabotadores Internos",type:"scale",text:"Sou muito exigente comigo mesmo quando não atinjo um resultado que esperava.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Juiz"},
+  {id:"sb2",phase:"Sabotadores Internos",type:"scale",text:"Sinto necessidade de controlar como as coisas são feitas para evitar que saiam erradas.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Controlador"},
+  {id:"sb3",phase:"Sabotadores Internos",type:"scale",text:"Fico inquieto quando há tarefas ou metas ainda pendentes.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Realizador"},
+  {id:"sb4",phase:"Sabotadores Internos",type:"scale",text:"Evito dizer não ou criar conflito, mesmo quando algo me incomoda.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Esquivador"},
+  {id:"sb5",phase:"Sabotadores Internos",type:"scale",text:"Fico pensando muito antes de agir por medo de tomar a decisão errada.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Hiperanalitico"},
+  {id:"sb6",phase:"Sabotadores Internos",type:"scale",text:"Coloco as necessidades dos outros antes das minhas mesmo quando isso me prejudica.",labels:{a:"Não me identifico",b:"Me identifico muito"},dim:"Prestativo"}
+];
+
+var DISC_NAMES = {D:"Dominante",I:"Influente",S:"Estável",C:"Criterioso"};
+var DISC_COLORS = {D:"#FF6B6B",I:"#6BCB77",S:"#6B9EFF",C:"#C77DFF"};
+
+// ══════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════
+var GROQ_DEFAULT = "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";
+var STATE = {
+  cfg: null,
+  part: null,
+  qi: 0,
+  answers: {},
+  results: [],
+  current: null,
+  groqKey: GROQ_DEFAULT
+};
+
+// ══════════════════════════════════════════════════════════════
+// UTILITÁRIOS
+// ══════════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("on"); });
+  document.getElementById(id).classList.add("on");
+}
+
+function toast(msg) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  setTimeout(function(){ el.classList.remove("on"); }, 2600);
+}
+
+// ══════════════════════════════════════════════════════════════
+// FIREBASE CONFIG — substitua pelos seus dados do Firebase Console
+// ══════════════════════════════════════════════════════════════
+var FIREBASE_CFG = {
+  apiKey: "AIzaSyBwJhEL5utPr5sIWejb3HiwAcqSPA8Y09k",
+  authDomain: "vizzio-assessment.firebaseapp.com",
+  projectId: "vizzio-assessment",
+  storageBucket: "vizzio-assessment.firebasestorage.app",
+  messagingSenderId: "357901497238",
+  appId: "1:357901497238:web:7da5159656d270906b63b7"
+};
+var DB = null;
+var FIREBASE_OK = false;
+
+function initFirebase() {
+  var dot = document.getElementById("fbDot");
+  var msg = document.getElementById("fbMsg");
+  var alert = document.getElementById("fbConfigAlert");
+  try {
+    if (FIREBASE_CFG.apiKey.indexOf("COLE_") === 0) throw new Error("not_configured");
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CFG);
+    DB = firebase.firestore();
+    DB.enablePersistence({synchronizeTabs:true}).catch(function(){});
+    // Testar conexão real
+    DB.collection("resultados").limit(1).get()
+      .then(function(){
+        FIREBASE_OK = true;
+        if(dot) dot.style.background = "#22C55E";
+        if(msg) msg.textContent = "Banco de dados conectado — resultados sincronizados em tempo real.";
+        if(msg) msg.style.color = "#22C55E";
+        flushPending();
+      })
+      .catch(function(e){
+        FIREBASE_OK = false;
+        if(dot) dot.style.background = "#EF4444";
+        if(msg) msg.textContent = "Erro ao conectar com o banco. Verificar configuração do Firebase.";
+        if(msg) msg.style.color = "#EF4444";
+        if(alert) alert.style.display = "block";
+      });
+  } catch(e) {
+    FIREBASE_OK = false;
+    if(dot) dot.style.background = "#F59E0B";
+    if(msg) msg.textContent = "Banco de dados não configurado. Resultados salvos apenas neste navegador.";
+    if(msg) msg.style.color = "#F59E0B";
+    if(alert) alert.style.display = "block";
+    console.warn("Firebase init error:", e);
+  }
+}
+
+function saveResults() {
+  try { localStorage.setItem("vz_results", JSON.stringify(STATE.results)); } catch(e){}
+}
+
+function loadResults() {
+  try { STATE.results = JSON.parse(localStorage.getItem("vz_results") || "[]"); } catch(e){ STATE.results = []; }
+}
+
+function saveResultFirebase(r, attempts) {
+  if (!FIREBASE_OK || !DB) { savePending(r); return; }
+  attempts = attempts || 0;
+  DB.collection("resultados").doc(String(r.id)).set(r)
+    .then(function(){ removePending(r.id); })
+    .catch(function(err){
+      console.warn("Firebase save error (tentativa "+(attempts+1)+"):", err);
+      if (attempts < 4) {
+        setTimeout(function(){ saveResultFirebase(r, attempts+1); }, 2000 * Math.pow(2, attempts));
+      } else { savePending(r); }
+    });
+}
+
+function savePending(r) {
+  try {
+    var q = JSON.parse(localStorage.getItem("vz_pending") || "[]");
+    if (!q.find(function(x){ return x.id===r.id; })) { q.push(r); localStorage.setItem("vz_pending", JSON.stringify(q)); }
+  } catch(e){}
+}
+
+function removePending(id) {
+  try {
+    var q = JSON.parse(localStorage.getItem("vz_pending") || "[]").filter(function(x){ return x.id!==id; });
+    localStorage.setItem("vz_pending", JSON.stringify(q));
+  } catch(e){}
+}
+
+function flushPending() {
+  if (!FIREBASE_OK) return;
+  try { JSON.parse(localStorage.getItem("vz_pending") || "[]").forEach(function(r){ saveResultFirebase(r,0); }); } catch(e){}
+}
+
+function loadResultsFirebase(callback) {
+  if (!FIREBASE_OK || !DB) { loadResults(); if(callback) callback(); return; }
+  DB.collection("resultados").orderBy("id","desc").get()
+    .then(function(snap){
+      var remote = [];
+      snap.forEach(function(doc){ remote.push(doc.data()); });
+      var pending = [];
+      try { pending = JSON.parse(localStorage.getItem("vz_pending") || "[]"); } catch(e){}
+      var ids = remote.map(function(r){ return r.id; });
+      pending.forEach(function(r){ if(ids.indexOf(r.id)===-1) remote.push(r); });
+      STATE.results = remote;
+      saveResults();
+      if(callback) callback();
+    })
+    .catch(function(err){ console.warn("Firebase load error:", err); loadResults(); if(callback) callback(); });
+}
+
+
+function loadKey() {
+  try { return localStorage.getItem("vz_key") || ""; } catch(e){ return ""; }
+}
+
+function saveKey(k) {
+  try { localStorage.setItem("vz_key", k); } catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ══════════════════════════════════════════════════════════════
+function login() {
+  var u = document.getElementById("lUser").value.trim();
+  var p = document.getElementById("lPass").value.trim();
+  if (u === "vizzio" && p === "vizzio2025") {
+    document.getElementById("lErr").style.display = "none";
+    document.getElementById("lErr").style.display = "none";
+    showPage("pgAdmin");
+    var k = loadKey();
+    if (k) document.getElementById("cfgKey").value = k;
+    loadResultsFirebase(function(){
+      renderStats();
+      renderResults();
+    });
+  } else {
+    document.getElementById("lErr").style.display = "block";
+  }
+}
+
+function logout() { showPage("pgLogin"); }
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN — STATS
+// ══════════════════════════════════════════════════════════════
+function renderStats() {
+  var done = STATE.results.filter(function(r){ return r.status === "done"; }).length;
+  var pf = {D:0,I:0,S:0,C:0};
+  STATE.results.forEach(function(r){ if(r.disc && r.disc.dom) pf[r.disc.dom]++; });
+  var top = Object.keys(pf).sort(function(a,b){ return pf[b]-pf[a]; })[0];
+  document.getElementById("statsGrid").innerHTML =
+    sc(STATE.results.length, "Links enviados") +
+    sc(done, "Concluídos") +
+    sc(STATE.results.length - done, "Pendentes") +
+    sc(top && pf[top] ? top + " (" + pf[top] + ")" : "—", "Perfil + frequente");
+}
+
+function sc(v,l){ return '<div class="sc"><div class="sc-val">'+v+'</div><div class="sc-lbl">'+l+'</div></div>'; }
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN — GERAR LINK
+// ══════════════════════════════════════════════════════════════
+function genLink() {
+  var name = document.getElementById("cfgName").value.trim() || "Vizzio Assessment";
+  var co   = document.getElementById("cfgCo").value.trim();
+  var lv   = document.getElementById("cfgLv").value;
+  var key  = document.getElementById("cfgKey").value.trim();
+  if (key) saveKey(key);
+  var p = new URLSearchParams({n:name, c:co, l:lv, k:key ? btoa(key) : ""});
+  var link = location.href.split("?")[0] + "?" + p.toString();
+  document.getElementById("linkTxt").textContent = link;
+  document.getElementById("linkBox").style.display = "block";
+}
+
+function copyLink() {
+  var t = document.getElementById("linkTxt").textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(function(){ toast("Link copiado!"); });
+  } else {
+    var el = document.createElement("textarea");
+    el.value = t; document.body.appendChild(el); el.select();
+    document.execCommand("copy"); document.body.removeChild(el);
+    toast("Link copiado!");
+  }
+}
+
+function sendWhatsApp() {
+  var link = document.getElementById("linkTxt").textContent;
+  var co = document.getElementById("cfgCo").value.trim() || "Vizzio Training";
+  var name = document.getElementById("cfgName").value.trim() || "Vizzio Assessment";
+  var msg = "Olá! 👋\n\nVocê foi convidado(a) para participar do *" + name + "* — " + co + ".\n\nAcesse o link abaixo, responda as perguntas e seu perfil comportamental será gerado automaticamente:\n\n" + link + "\n\n_Vizzio Assessment — Plataforma de Perfil Comportamental_";
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN — RESULTADOS
+// ══════════════════════════════════════════════════════════════
+function refreshRes() {
+  toast("Sincronizando...");
+  loadResultsFirebase(function(){
+    renderResults(); renderStats(); toast("Atualizado!");
+  });
+}
+
+function renderResults() {
+  var tb = document.getElementById("resTbody");
+  if (!STATE.results.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty">Nenhum resultado ainda. Gere um link e envie para os participantes.</div></td></tr>';
+    return;
+  }
+  var h = "";
+  STATE.results.forEach(function(r, i) {
+    var dm = r.disc && r.disc.dom;
+    var chip = dm ? '<span class="chip c'+dm+'">'+dm+' — '+DISC_NAMES[dm]+'</span>' : "—";
+    var badge = r.status === "done" ? '<span class="badge-done">Concluído</span>' : '<span class="badge-pend">Pendente</span>';
+    h += '<tr><td style="font-weight:600;color:#fff">'+(r.name||"—")+'</td><td>'+(r.co||"—")+'</td><td>'+(r.role||"—")+'</td><td>'+chip+'</td><td>'+badge+'</td><td><button class="vbtn" onclick="viewResult('+i+')">Ver</button></td></tr>';
+  });
+  tb.innerHTML = h;
+}
+
+function viewResult(i) {
+  var r = STATE.results[i];
+  if (!r || r.status !== "done") { toast("Resultado não disponível."); return; }
+  document.getElementById("mtitle").textContent = "Perfil — " + r.name;
+  document.getElementById("mbody").innerHTML = buildAdminResultHTML(r, i);
+  document.getElementById("overlay").classList.add("open");
+  setTimeout(function(){
+    drawCharts(r, "m_");
+    // Auto-gera interpretação se já tiver chave e ainda não foi gerada
+    if (!r.adminAI) {
+      var key = (document.getElementById("cfgKey") && document.getElementById("cfgKey").value.trim()) || loadKey() || STATE.groqKey || "";
+      if (key) gerarInterpretacaoAdmin(i);
+    }
+  }, 150);
+}
+
+function buildAdminResultHTML(r, idx) {
+  var h = buildResultHTML(r, false);
+  // Adiciona seção de interpretação admin
+  h += '<div id="admin-interp-'+idx+'" style="margin-top:16px">';
+  if (r.adminAI) {
+    h += renderAdminInterpHTML(r.adminAI);
+  } else {
+    h += '<button class="fbtn fbtn-t" style="width:100%;margin-top:4px" onclick="gerarInterpretacaoAdmin('+idx+')">🧠 Interpretar Perfil para Mim (Consultor)</button>';
+    h += '<div id="admin-interp-load-'+idx+'" style="display:none;color:#555;font-size:13px;text-align:center;padding:16px">Gerando interpretação...</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function renderAdminInterpHTML(txt) {
+  return '<div class="ai-box" style="border-color:rgba(0,212,200,.35);background:rgba(0,212,200,.04)">' +
+    '<h3 style="color:#00D4C8;margin-bottom:4px">🧠 Interpretação para o Consultor</h3>' +
+    '<p style="font-size:11px;color:#555;margin-bottom:12px">Uso interno — não exibido ao participante</p>' +
+    '<div class="ai-txt" style="color:#BBB">' + txt + '</div>' +
+    '</div>';
+}
+
+function gerarInterpretacaoAdmin(idx) {
+  var r = STATE.results[idx];
+  if (!r) return;
+
+  // Busca chave: campo visível → localStorage → padrão embutida
+  var cfgEl = document.getElementById("cfgKey");
+  var key = (cfgEl && cfgEl.value.trim()) || loadKey() || STATE.groqKey || GROQ_DEFAULT;
+
+  if (!key) {
+    var box = document.getElementById("admin-interp-"+idx);
+    if (box) box.innerHTML =
+      '<div style="background:#1A1000;border:1px solid #3A2800;border-radius:12px;padding:20px;margin-top:8px">' +
+      '<div style="font-size:14px;font-weight:700;color:#F59E0B;margin-bottom:10px">⚙️ Configure a IA para usar esta função</div>' +
+      '<div style="font-size:13px;color:#888;line-height:1.75;margin-bottom:14px">' +
+      'A interpretação usa o modelo <b style="color:#CCC">Llama 3.3</b> via <b style="color:#CCC">Groq</b> (gratuito). Siga os passos:<br><br>' +
+      '<b style="color:#AAA">1.</b> Acesse <a href="https://console.groq.com" target="_blank" style="color:#00D4C8">console.groq.com</a><br>' +
+      '<b style="color:#AAA">2.</b> Crie uma conta gratuita (ou entre com Google)<br>' +
+      '<b style="color:#AAA">3.</b> Vá em <b style="color:#CCC">API Keys → Create API Key</b><br>' +
+      '<b style="color:#AAA">4.</b> Copie a chave (começa com <code style="color:#00D4C8">gsk_</code>)<br>' +
+      '<b style="color:#AAA">5.</b> Cole no campo <b style="color:#CCC">"Chave Groq (IA)"</b> na configuração do painel e clique em <b style="color:#CCC">Gerar Link</b><br><br>' +
+      'Depois abra este resultado novamente e clique em Interpretar.' +
+      '</div>' +
+      '<button class="fbtn fbtn-t" style="max-width:220px" onclick="focarChaveGroq()">Ir para o campo da chave</button>' +
+      '</div>';
+    return;
+  }
+
+  var btn = document.querySelector("#admin-interp-"+idx+" .fbtn-t");
+  var load = document.getElementById("admin-interp-load-"+idx);
+  if (btn) btn.style.display = "none";
+  if (load) load.style.display = "block";
+
+  var sabStr = Object.entries(r.saboteurs||{}).sort(function(a,b){return b[1]-a[1];}).map(function(e){return e[0]+"="+e[1];}).join(", ");
+  var prompt = "Você é um consultor especialista em DISC, Temperamentos, Dominância Cerebral, Inteligência Positiva e Sabotadores Internos.\n\nEste relatório é PARA O CONSULTOR, não para o avaliado. Seja direto, objetivo e prático.\n\nPerfil analisado:\nNOME: "+r.name+"\nCARGO: "+r.role+"\nEMPRESA: "+r.co+"\nDISC: D="+r.disc.D+"% I="+r.disc.I+"% S="+r.disc.S+"% C="+r.disc.C+"% Dominante="+r.disc.dom+"\nTEMPERAMENTO: Sanguíneo="+r.temp.Sanguineo+"% Colérico="+r.temp.Colerico+"% Fleumático="+r.temp.Fleumatico+"% Melancólico="+r.temp.Melancolico+"%\nCEREBRAL: Esquerdo="+r.brain.L+"% Direito="+r.brain.R+"%\nQP: "+r.qp.score+"/100\nSABOTADORES: "+sabStr+"\n\nGere uma interpretação para o CONSULTOR com as seções:\n💪 FORÇAS PRINCIPAIS (3 pontos concretos)\n⚠️ FRAQUEZAS E RISCOS (3 pontos com alertas práticos)\n🎯 COMO TRABALHAR COM ESSA PESSOA (comunicação, gestão, liderança)\n🛑 PRINCIPAIS SABOTADORES ATIVOS (o que vigiar)\n📋 SUGESTÕES DE INTERVENÇÃO (3 ações recomendadas ao consultor)\n\nSeja direto e prático. Máximo 400 palavras.";
+
+  fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {"Content-Type":"application/json","Authorization":"Bearer "+key},
+    body: JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:900,messages:[{role:"user",content:prompt}]})
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    var txt = (data.choices && data.choices[0]) ? data.choices[0].message.content : "Não foi possível gerar a interpretação.";
+    STATE.results[idx].adminAI = txt;
+    saveResults();
+    var box = document.getElementById("admin-interp-"+idx);
+    if (box) box.innerHTML = renderAdminInterpHTML(txt);
+  })
+  .catch(function(e){
+    if (load) { load.style.display="none"; }
+    if (btn) { btn.style.display="block"; }
+    toast("Erro ao gerar interpretação. Verifique a chave Groq.");
+  });
+}
+
+function focarChaveGroq() {
+  closeModal();
+  var el = document.getElementById("cfgKey");
+  if (el) { el.focus(); el.scrollIntoView({behavior:"smooth", block:"center"}); }
+}
+
+function closeModal() {
+  document.getElementById("overlay").classList.remove("open");
+}
+
+// ══════════════════════════════════════════════════════════════
+// ASSESSMENT — INIT URL
+// ══════════════════════════════════════════════════════════════
+function initFromURL() {
+  var p = new URLSearchParams(location.search);
+  if (!p.get("n")) return;
+  STATE.cfg = {
+    name: p.get("n") || "Vizzio Assessment",
+    co:   p.get("c") || "",
+    lv:   p.get("l") || "mgmt",
+    key:  p.get("k") ? (function(){ try{ return atob(p.get("k")); }catch(e){ return ""; } })() : loadKey()
+  };
+  STATE.groqKey = STATE.cfg.key || GROQ_DEFAULT;
+  document.getElementById("aTitle").textContent = STATE.cfg.name;
+  document.getElementById("aCo").textContent    = STATE.cfg.co || "Vizzio Training";
+  document.getElementById("rTitle").textContent = STATE.cfg.name;
+  document.getElementById("step0").style.display = "block";
+  document.getElementById("stepQ").style.display = "none";
+  showPage("pgAssess");
+}
+
+// ══════════════════════════════════════════════════════════════
+// ASSESSMENT — INICIAR
+// ══════════════════════════════════════════════════════════════
+function startAssessment() {
+  var name  = document.getElementById("pName").value.trim();
+  var phone = document.getElementById("pPhone").value.trim();
+  var co    = document.getElementById("pCo").value.trim();
+  var role  = document.getElementById("pRole").value.trim();
+  if (!name || !phone || !co || !role) {
+    toast("Preencha todos os campos para continuar."); return;
+  }
+  STATE.part = {name:name, phone:phone, co:co, role:role};
+  STATE.qi = 0;
+  STATE.answers = {};
+  document.getElementById("step0").style.display = "none";
+  document.getElementById("stepQ").style.display = "block";
+  renderQuestion();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ASSESSMENT — RENDERIZAR PERGUNTA
+// ══════════════════════════════════════════════════════════════
+function renderQuestion() {
+  var q   = QUESTIONS[STATE.qi];
+  var tot = QUESTIONS.length;
+  var pct = Math.round(STATE.qi / tot * 100);
+
+  document.getElementById("progFill").style.width = pct + "%";
+  document.getElementById("progTxt").textContent  = (STATE.qi + 1) + " / " + tot;
+  document.getElementById("phTag").textContent    = q.phase;
+  document.getElementById("btnBack").disabled     = STATE.qi === 0;
+
+  var hasAns = STATE.answers[q.id] !== undefined;
+  document.getElementById("btnNext").disabled     = !hasAns;
+  document.getElementById("btnNext").textContent  = STATE.qi === tot - 1 ? "Ver Resultado →" : "Próxima →";
+
+  var h = '<div class="qcard">';
+  h += '<div class="qnum">Pergunta ' + (STATE.qi + 1) + ' de ' + tot + '</div>';
+  h += '<div class="qtext">' + q.text + '</div>';
+
+  if (q.type === "choice") {
+    h += '<div class="opts">';
+    q.opts.forEach(function(opt, i) {
+      var sel = STATE.answers[q.id] === i ? " sel" : "";
+      h += '<button class="opt' + sel + '" onclick="selectChoice(\'' + q.id + '\',' + i + ')">' + opt + '</button>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div class="scale-row">';
+    for (var v = 1; v <= 5; v++) {
+      var sel = STATE.answers[q.id] === v ? " sel" : "";
+      var lbl = ["","😞","🙁","😐","😊","😄"][v];
+      h += '<button class="scl' + sel + '" onclick="selectScale(\'' + q.id + '\',' + v + ')">' + v + '</button>';
+    }
+    h += '</div>';
+    h += '<div class="scale-lbl"><span>' + q.labels.a + '</span><span>' + q.labels.b + '</span></div>';
+  }
+
+  h += '</div>';
+  document.getElementById("qArea").innerHTML = h;
+}
+
+function selectChoice(id, v) {
+  STATE.answers[id] = v;
+  document.getElementById("btnNext").disabled = false;
+  renderQuestion();
+}
+
+function selectScale(id, v) {
+  STATE.answers[id] = v;
+  document.getElementById("btnNext").disabled = false;
+  renderQuestion();
+}
+
+function nextQ() {
+  if (STATE.qi < QUESTIONS.length - 1) { STATE.qi++; renderQuestion(); }
+  else { compute(); }
+}
+
+function prevQ() {
+  if (STATE.qi > 0) { STATE.qi--; renderQuestion(); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CALCULAR RESULTADO
+// ══════════════════════════════════════════════════════════════
+function compute() {
+  showPage("pgLoad");
+  document.getElementById("loadTxt").textContent = "Calculando seu perfil comportamental…";
+
+  // Acumuladores
+  var disc = {D:0,I:0,S:0,C:0};
+  var dcnt = {D:0,I:0,S:0,C:0};
+  var temp = {Sanguineo:0,Colerico:0,Fleumatico:0,Melancolico:0};
+  var tcnt = {Sanguineo:0,Colerico:0,Fleumatico:0,Melancolico:0};
+  var brainL = 0, brainR = 0, brainCnt = 0;
+  var qpSum = 0, qpCnt = 0;
+  var sabs = {Juiz:0,Controlador:0,Realizador:0,Esquivador:0,Hiperanalitico:0,Prestativo:0};
+  var sabCnt = {Juiz:0,Controlador:0,Realizador:0,Esquivador:0,Hiperanalitico:0,Prestativo:0};
+
+  var TEMP_MAP = {Co:"Colerico", Sa:"Sanguineo", Fl:"Fleumatico", Me:"Melancolico"};
+
+  QUESTIONS.forEach(function(q) {
+    var a = STATE.answers[q.id];
+    if (a === undefined) return;
+
+    if (q.type === "scale") {
+      var norm = (a / 5) * 100; // 1–5 → 20–100
+      if (["D","I","S","C"].indexOf(q.dim) !== -1) {
+        disc[q.dim] += norm; dcnt[q.dim]++;
+      } else if (q.dim === "Co") { temp.Colerico += norm; tcnt.Colerico++; }
+      else if (q.dim === "Me")   { temp.Melancolico += norm; tcnt.Melancolico++; }
+      else if (q.dim === "L")    { brainL += norm; brainCnt++; }
+      else if (q.dim === "R")    { brainR += norm; brainCnt++; }
+      else if (q.dim === "QP")   { qpSum += norm; qpCnt++; }
+      else if (sabs[q.dim] !== undefined) { sabs[q.dim] += norm; sabCnt[q.dim]++; }
+    } else { // choice
+      if (q.dims) {
+        var chosen = q.dims[a];
+        if (["D","I","S","C"].indexOf(chosen) !== -1) {
+          disc[chosen] += 100; dcnt[chosen]++;
+        } else if (TEMP_MAP[chosen]) {
+          temp[TEMP_MAP[chosen]] += 100; tcnt[TEMP_MAP[chosen]]++;
+        } else if (chosen === "LL") { brainL += 100; brainCnt++; }
+          else if (chosen === "RR") { brainR += 100; brainCnt++; }
+          else if (chosen === "LR") { brainL += 60; brainR += 40; brainCnt++; }
+          else if (chosen === "RL") { brainR += 60; brainL += 40; brainCnt++; }
+      }
+    }
+  });
+
+  // Médias DISC → normalizar para 100%
+  var discFinal = {};
+  ["D","I","S","C"].forEach(function(d) {
+    discFinal[d] = dcnt[d] ? Math.round(disc[d] / dcnt[d]) : (20 + Math.floor(Math.random()*20));
+  });
+  var dt = discFinal.D + discFinal.I + discFinal.S + discFinal.C || 1;
+  ["D","I","S","C"].forEach(function(d){ discFinal[d] = Math.round(discFinal[d] / dt * 100); });
+  // garante que somem 100 ajustando o maior
+  var diff = 100 - (discFinal.D+discFinal.I+discFinal.S+discFinal.C);
+  var dom = ["D","I","S","C"].reduce(function(a,b){ return discFinal[a]>discFinal[b]?a:b; });
+  discFinal[dom] += diff;
+  discFinal.dom = dom;
+
+  // Temperamento
+  var tempFinal = {};
+  Object.keys(temp).forEach(function(k){
+    tempFinal[k] = tcnt[k] ? Math.round(temp[k]/tcnt[k]) : (20+Math.floor(Math.random()*20));
+  });
+  var tt = Object.values(tempFinal).reduce(function(a,b){ return a+b; }, 0) || 1;
+  Object.keys(tempFinal).forEach(function(k){ tempFinal[k] = Math.round(tempFinal[k]/tt*100); });
+  var tdiff = 100 - Object.values(tempFinal).reduce(function(a,b){ return a+b; }, 0);
+  var tdom = Object.keys(tempFinal).reduce(function(a,b){ return tempFinal[a]>tempFinal[b]?a:b; });
+  tempFinal[tdom] += tdiff;
+
+  // Cérebro
+  var totalBrain = brainL + brainR || 1;
+  var bL = Math.round(brainL / totalBrain * 100);
+  var bR = 100 - bL;
+
+  // QP
+  var qpScore = qpCnt ? Math.round(qpSum / qpCnt) : 55;
+
+  // Sabotadores
+  var sabFinal = {};
+  Object.keys(sabs).forEach(function(k){
+    sabFinal[k] = sabCnt[k] ? Math.round(sabs[k]/sabCnt[k]) : Math.floor(Math.random()*40);
+  });
+
+  var result = {
+    id:       Date.now(),
+    status:   "done",
+    name:     STATE.part.name,
+    phone:    STATE.part.phone,
+    co:       STATE.part.co,
+    role:     STATE.part.role,
+    disc:     discFinal,
+    temp:     tempFinal,
+    brain:    {L:bL, R:bR},
+    qp:       {score:qpScore},
+    saboteurs:sabFinal,
+    ai:       "",
+    at:       new Date().toLocaleString("pt-BR")
+  };
+
+  STATE.current = result;
+
+  if (STATE.groqKey) {
+    callGroq(result);
+  } else {
+    STATE.groqKey = GROQ_DEFAULT;
+    callGroq(result);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GROQ AI — chamada simplificada (interpretação gerada no submitResult)
+// ══════════════════════════════════════════════════════════════
+function callGroq(r) {
+  // Exibe resultado imediatamente ao participante (sem interpretação admin)
+  showResult(r);
+}
+
+// ══════════════════════════════════════════════════════════════
+// MOSTRAR RESULTADO
+// ══════════════════════════════════════════════════════════════
+function showResult(r) {
+  var rb = document.getElementById("rbody");
+  rb.innerHTML = buildResultHTML(r, true);
+  showPage("pgResult");
+  setTimeout(function(){ drawCharts(r, ""); }, 150);
+}
+
+function buildResultHTML(r, withButtons) {
+  var d = r.disc || {D:25,I:25,S:25,C:25,dom:"D"};
+  var t = r.temp || {Sanguineo:25,Colerico:25,Fleumatico:25,Melancolico:25};
+  var b = r.brain || {L:50,R:50};
+  var s = r.saboteurs || {};
+
+  var h = "";
+  h += '<div class="hero">';
+  h += '<div class="hero-sub">Perfil Comportamental</div>';
+  h += '<div class="hero-name">'+r.name+'</div>';
+  h += '<div class="hero-role">'+r.role+' — '+r.co+'</div>';
+  h += '</div>';
+
+  // DISC cards
+  h += '<div class="disc-grid">';
+  ["D","I","S","C"].forEach(function(x){
+    h += '<div class="dcard"><div class="dletter" style="color:'+DISC_COLORS[x]+'">'+x+'</div>';
+    h += '<div class="dname">'+DISC_NAMES[x]+'</div>';
+    h += '<div class="dscore">'+d[x]+'%'+(x===d.dom?" ★":"")+'</div></div>';
+  });
+  h += '</div>';
+
+  // Gráficos — prefixo p/ evitar id duplicado no modal
+  var pf = withButtons ? "" : "m_";
+  h += '<div class="chart-grid-2">';
+  h += '<div class="chart-card"><div class="ct">Perfil DISC</div><canvas id="'+pf+'cDisc"></canvas></div>';
+  h += '<div class="chart-card"><div class="ct">Temperamento</div><canvas id="'+pf+'cTemp"></canvas></div>';
+  h += '</div>';
+  h += '<div class="chart-grid-2">';
+  h += '<div class="chart-card"><div class="ct">Dominância Cerebral</div><canvas id="'+pf+'cBrain"></canvas></div>';
+  h += '<div class="chart-card"><div class="ct">QP — Inteligência Positiva</div><canvas id="'+pf+'cQP"></canvas></div>';
+  h += '</div>';
+
+  // Sabotadores
+  h += '<div class="chart-card" style="margin-bottom:14px"><div class="ct">Sabotadores Internos</div>';
+  var sabEntries = Object.entries(s).sort(function(a,b){ return b[1]-a[1]; });
+  sabEntries.forEach(function(e){
+    h += '<div class="sab-item">';
+    h += '<div class="sab-name">'+e[0]+'</div>';
+    h += '<div class="sab-bar"><div class="sab-fill" style="width:'+e[1]+'%"></div></div>';
+    h += '<div class="sab-val">'+e[1]+'</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+
+  // Botões (tela do participante)
+  if (withButtons) {
+    h += '<div class="fbtn-row">';
+    h += '<button class="fbtn fbtn-t" onclick="submitResult()">Enviar Resultado</button>';
+    h += '<button class="fbtn fbtn-d" onclick="window.print()">Salvar como PDF</button>';
+    h += '</div>';
+  }
+
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════════
+// GRÁFICOS
+// ══════════════════════════════════════════════════════════════
+function drawCharts(r, pf) {
+  var d = r.disc;
+  var t = r.temp;
+  var b = r.brain;
+
+  // DISC — Radar
+  drawRadar(pf+"cDisc",
+    [DISC_NAMES.D, DISC_NAMES.I, DISC_NAMES.S, DISC_NAMES.C],
+    [d.D, d.I, d.S, d.C],
+    DISC_COLORS[d.dom]);
+
+  // Temperamento — Donut
+  drawDonut(pf+"cTemp",
+    ["Sanguíneo","Colérico","Fleumático","Melancólico"],
+    [t.Sanguineo, t.Colerico, t.Fleumatico, t.Melancolico],
+    ["#6BCB77","#FF6B6B","#6B9EFF","#C77DFF"]);
+
+  // Cérebro — Barras
+  drawBars(pf+"cBrain",
+    ["Esq. Lógico","Dir. Criativo"],
+    [b.L, b.R],
+    ["#6B9EFF","#FF9F6B"]);
+
+  // QP — Donut
+  drawDonut(pf+"cQP",
+    ["QP","Sabotadores"],
+    [r.qp.score, 100-r.qp.score],
+    ["#00D4C8","#2A2A2A"]);
+}
+
+function getCanvas(id) {
+  var cv = document.getElementById(id);
+  if (!cv) return null;
+  cv.width  = (cv.parentElement.clientWidth - 36) || 260;
+  cv.height = 200;
+  return cv;
+}
+
+function drawRadar(id, labels, data, color) {
+  var cv = getCanvas(id); if (!cv) return;
+  var ctx = cv.getContext("2d");
+  var cx = cv.width/2, cy = cv.height/2;
+  var r = Math.min(cx, cy) - 30;
+  var n = labels.length;
+  var step = Math.PI * 2 / n;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  for (var ring = 1; ring <= 5; ring++) {
+    ctx.beginPath();
+    for (var i = 0; i < n; i++) {
+      var a = i * step - Math.PI/2;
+      var x = cx + Math.cos(a) * r * ring/5;
+      var y = cy + Math.sin(a) * r * ring/5;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.strokeStyle = "#222"; ctx.lineWidth = 1; ctx.stroke();
+  }
+  for (var i = 0; i < n; i++) {
+    var a = i * step - Math.PI/2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+    ctx.strokeStyle = "#222"; ctx.stroke();
+  }
+
+  ctx.beginPath();
+  for (var i = 0; i < n; i++) {
+    var a = i * step - Math.PI/2;
+    var v = (data[i]||0) / 100;
+    var x = cx + Math.cos(a)*r*v;
+    var y = cy + Math.sin(a)*r*v;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(0,212,200,.15)"; ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+
+  ctx.fillStyle = "#666"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+  for (var i = 0; i < n; i++) {
+    var a = i * step - Math.PI/2;
+    ctx.fillText(labels[i], cx + Math.cos(a)*(r+18), cy + Math.sin(a)*(r+18) + 4);
+  }
+}
+
+function drawDonut(id, labels, data, colors) {
+  var cv = getCanvas(id); if (!cv) return;
+  var ctx = cv.getContext("2d");
+  var cx = cv.width/2, cy = (cv.height-24)/2;
+  var r = Math.min(cx, cy-8) - 6;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var total = data.reduce(function(a,b){ return a+b; }, 0) || 1;
+  var start = -Math.PI/2;
+  for (var i = 0; i < data.length; i++) {
+    var slice = data[i] / total * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx, cy, r, start, start+slice);
+    ctx.closePath(); ctx.fillStyle = colors[i]; ctx.fill();
+    start += slice;
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, r*0.55, 0, Math.PI*2);
+  ctx.fillStyle = "#161616"; ctx.fill();
+
+  ctx.font = "11px sans-serif"; ctx.textAlign = "left";
+  for (var i = 0; i < Math.min(labels.length, 4); i++) {
+    var lx = i%2===0 ? 6 : cx+4;
+    var ly = cv.height - 20 + Math.floor(i/2)*13;
+    ctx.fillStyle = colors[i]; ctx.fillRect(lx, ly-7, 8, 8);
+    ctx.fillStyle = "#666"; ctx.fillText(labels[i]+" "+data[i]+"%", lx+11, ly+1);
+  }
+}
+
+function drawBars(id, labels, data, colors) {
+  var cv = getCanvas(id); if (!cv) return;
+  var ctx = cv.getContext("2d");
+  var w = cv.width, h = cv.height;
+  var pad = 30, top = 18, btm = h - 28;
+  var mx = Math.max.apply(null, data) || 1;
+  ctx.clearRect(0, 0, w, h);
+  var bw = Math.min((w - pad*2) / (labels.length * 2.2), 70);
+  for (var i = 0; i < data.length; i++) {
+    var bh = (data[i]/mx) * (btm-top);
+    var x = pad + i * (bw * 2.2);
+    var y = btm - bh;
+    ctx.beginPath(); ctx.rect(x, y, bw, bh);
+    ctx.fillStyle = colors[i]; ctx.fill();
+    ctx.fillStyle = "#888"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(labels[i], x+bw/2, btm+16);
+    ctx.fillStyle = "#fff"; ctx.font = "12px sans-serif";
+    ctx.fillText(data[i]+"%", x+bw/2, y-5);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENVIAR RESULTADO
+// ══════════════════════════════════════════════════════════════
+function submitResult() {
+  var r = STATE.current;
+  if (!r) { toast("Nenhum resultado para enviar."); return; }
+  r.status = "done";
+
+  // Bloqueia botão para evitar duplo envio
+  var btn = document.querySelector("#pgResult .fbtn-t");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
+
+  // Garante adminAI antes de salvar
+  var key = STATE.groqKey || GROQ_DEFAULT;
+  var sabStr = Object.entries(r.saboteurs||{}).sort(function(a,b){return b[1]-a[1];}).map(function(e){return e[0]+"="+e[1];}).join(", ");
+  var prompt = "Você é um consultor especialista em DISC, Temperamentos, Dominância Cerebral, Inteligência Positiva e Sabotadores Internos.\n\nEste relatório é PARA O CONSULTOR, não para o avaliado. Seja direto, objetivo e prático.\n\nPerfil:\nNOME: "+r.name+"\nCARGO: "+r.role+"\nEMPRESA: "+r.co+"\nDISC: D="+r.disc.D+"% I="+r.disc.I+"% S="+r.disc.S+"% C="+r.disc.C+"% Dominante="+r.disc.dom+"\nTEMPERAMENTO: Sanguíneo="+r.temp.Sanguineo+"% Colérico="+r.temp.Colerico+"% Fleumático="+r.temp.Fleumatico+"% Melancólico="+r.temp.Melancolico+"%\nCEREBRAL: Esquerdo="+r.brain.L+"% Direito="+r.brain.R+"%\nQP: "+r.qp.score+"/100\nSABOTADORES: "+sabStr+"\n\nGere interpretação para o CONSULTOR:\n💪 FORÇAS PRINCIPAIS (3 pontos)\n⚠️ FRAQUEZAS E RISCOS (3 pontos)\n🎯 COMO TRABALHAR COM ESSA PESSOA\n🛑 SABOTADORES ATIVOS\n📋 SUGESTÕES DE INTERVENÇÃO (3 ações)\n\nMáximo 400 palavras.";
+
+  function finalizarEnvio() {
+    // Salva local + Firebase
+    var existing = STATE.results.findIndex(function(x){ return x.id === r.id; });
+    if (existing >= 0) STATE.results[existing] = r; else STATE.results.push(r);
+    saveResults();
+    saveResultFirebase(r, 0);
+
+    document.getElementById("rbody").innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:16px;padding:40px">'+
+      '<div style="font-size:64px;color:#00D4C8">✓</div>'+
+      '<div style="font-size:22px;font-weight:700;color:#fff">Resultado enviado!</div>'+
+      '<div style="font-size:14px;color:#666;max-width:320px;line-height:1.7">Seu perfil comportamental foi registrado com sucesso. Obrigado por participar!</div>'+
+      '</div>';
+  }
+
+  fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+    body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:900,messages:[{role:"user",content:prompt}]})
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if (data.choices && data.choices[0]) r.adminAI = data.choices[0].message.content;
+    finalizarEnvio();
+  })
+  .catch(function(e){
+    console.warn("Groq error no submitResult:", e);
+    finalizarEnvio(); // envia mesmo sem IA
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", function() {
+  initFirebase();
+  loadResults();
+  initFromURL();
+});
+</script>
+</body>
+</html>
